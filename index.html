@@ -55,7 +55,7 @@
                 </div>
                 <div class="opcao-tamanho-card">
                     <input type="radio" id="tamQ" name="tamanhoMarmita" value="P">
-                    <label for="tamQ">P</label>
+                    <label for="tamM">M</label>
                 </div>
             </div>
         </div>
@@ -169,7 +169,7 @@
         
         if (!verificarStatusPedido()) return;
 
-        // Pega o tamanho selecionado (P, G ou P)
+        // Pega o tamanho selecionado (P, G ou M)
         const tamanhoSelecionado = document.querySelector('input[name="tamanhoMarmita"]:checked').value;
 
         // Pega os ingredientes marcados
