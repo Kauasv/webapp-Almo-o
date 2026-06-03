@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedido de Almoço da Empresa</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: #333; margin-bottom: 5px; }
+        .horario-aviso { background-color: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; font-size: 14px; margin-bottom: 20px; text-align: center; }
+        .campo { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        
+        /* Estilo para a seleção de tamanho lado a lado */
+        .opcoes-tamanho { display: flex; gap: 10px; margin-bottom: 20px; }
+        .opcao-tamanho-card { flex: 1; text-align: center; background: #f8f9fa; border: 1px solid #e9ecef; padding: 12px; border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .opcao-tamanho-card input { transform: scale(1.2); cursor: pointer; }
+        .opcao-tamanho-card label { margin: 0; font-weight: bold; cursor: pointer; }
+
+        .opcoes-prato { margin: 15px 0; }
+        .opcao { background: #f8f9fa; padding: 10px; margin-bottom: 8px; border-radius: 5px; border: 1px solid #e9ecef; display: flex; align-items: center; }
+        .opcao input { margin-right: 10px; transform: scale(1.2); cursor: pointer; }
+        .opcao label { font-weight: normal; margin-bottom: 0; cursor: pointer; width: 100%; }
+        
+        button { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; }
+        button:disabled { background-color: #6c757d; cursor: not-allowed; }
+        #mensagem-erro { color: red; text-align: center; font-weight: bold; margin-top: 10px; }
+        .loading { text-align: center; color: #666; font-style: italic; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Monte sua Marmita 🍲</h2>
+    <div class="horario-aviso">⚠️ Pedidos devem ser feitos até as <b>09:00</b>!</div>
+
+    <form id="formPedido">
+        <div class="campo">
+            <label for="nome">Seu Nome:</label>
+            <input type="text" id="nome" placeholder="Digite seu nome completo" required>
+        </div>
+
+        <div class="campo">
+            <label>Tamanho da Marmita:</label>
+            <div class="opcoes-tamanho">
+                <div class="opcao-tamanho-card">
+                    <input type="radio" id="tamP" name="tamanhoMarmita" value="P" required>
+                    <label for="tamP">P</label>
+                </div>
+                <div class="opcao-tamanho-card">
+                    <input type="radio" id="tamG" name="tamanhoMarmita" value="G">
+                    <label for="tamG">G</label>
+                </div>
+                <div class="opcao-tamanho-card">
+                    <input type="radio" id="tamQ" name="tamanhoMarmita" value="Q">
+                    <label for="tamQ">Q</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="opcoes-prato">
+            <label>Selecione os ingredientes de hoje:</label>
+            <div id="container-opcoes" class="loading">
+                Carregando os ingredientes do dia...
+            </div>
+        </div>
+
+        <button type="submit" id="btnEnviar" disabled>Confirmar Pedido</button>
+        <p id="mensagem-erro"></p>
+    </form>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBrfXYmD0DwHD1Lk2Zf9c_Dvc3KrCiAD9A",
+        authDomain: "almoco-empresa-7a582.firebaseapp.com",
+        projectId: "almoco-empresa-7a582",
+        storageBucket: "almoco-empresa-7a582.firebasestorage.app",
+        messagingSenderId: "646365633884",
+        appId: "1:646365633884:web:acd39ed091832d9ebdb599",
+        measurementId: "G-BKJH0N2E6N"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const dataHoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+
+    // --- BLOQUEIOS DE SEGURANÇA ---
+    function verificarStatusPedido() {
+        const agora = new Date();
+        const hora = agora.getHours();
+        const minutos = agora.getMinutes();
+        const btnEnviar = document.getElementById('btnEnviar');
+        const msgErro = document.getElementById('mensagem-erro');
+        const form = document.getElementById('formPedido');
+
+        if (hora > 9 || (hora === 9 && minutos > 0)) {
+            btnEnviar.disabled = true;
+            msgErro.innerText = "Horário limite excedido! O sistema fechou às 09:00.";
+            return false;
+        }
+
+        const jaPediu = localStorage.getItem('pedido_' + dataHoje);
+        if (jaPediu) {
+            form.innerHTML = `
+                <div style="text-align:center; color:green; font-weight:bold; padding: 20px;">
+                    <h3>✅ Pedido Já Realizado!</h3>
+                    <p style="color:#333; font-weight:normal; background:#f8f9fa; padding:10px; border-radius:5px;"><b>${jaPediu}</b></p>
+                    <p>Agora é só aguardar o horário do almoço.</p>
+                </div>`;
+            return false;
+        }
+        return true;
+    }
+
+    // --- CARREGAR INGREDIENTES ---
+    async function carregarCardapio() {
+        if (!verificarStatusPedido()) return;
+
+        const container = document.getElementById('container-opcoes');
+        const btnEnviar = document.getElementById('btnEnviar');
+
+        try {
+            const docRef = doc(db, "cardapios", dataHoje);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const cardapio = docSnap.data();
+                const listaItens = cardapio.itens || [];
+
+                if (listaItens.length === 0) {
+                    container.innerHTML = "<span style='color:orange;'>Nenhum ingrediente cadastrado para hoje.</span>";
+                    return;
+                }
+                
+                container.innerHTML = "";
+
+                listaItens.forEach((item, index) => {
+                    const divOpcao = document.createElement('div');
+                    divOpcao.className = 'opcao';
+                    divOpcao.innerHTML = `
+                        <input type="checkbox" id="item_${index}" name="ingredientesMarmita" value="${item}">
+                        <label for="item_${index}">${item}</label>
+                    `;
+                    container.appendChild(divOpcao);
+                });
+
+                btnEnviar.disabled = false;
+            } else {
+                container.innerHTML = "<span style='color:red;'>A Inez ainda não liberou os ingredientes de hoje!</span>";
+            }
+        } catch (erro) {
+            console.error(erro);
+            container.innerHTML = "<span style='color:red;'>Erro ao carregar os itens do cardápio.</span>";
+        }
+    }
+
+    carregarCardapio();
+
+    // --- ENVIAR PEDIDO ---
+    document.getElementById('formPedido').addEventListener('submit', async function(event) {
+        event.preventDefault();
+        
+        if (!verificarStatusPedido()) return;
+
+        // Pega o tamanho selecionado (P, G ou Q)
+        const tamanhoSelecionado = document.querySelector('input[name="tamanhoMarmita"]:checked').value;
+
+        // Pega os ingredientes marcados
+        const marcados = document.querySelectorAll('input[name="ingredientesMarmita"]:checked');
+        if (marcados.length === 0) {
+            alert("Por favor, selecione pelo menos um ingrediente para montar sua marmita!");
+            return;
+        }
+
+        const escolhas = Array.from(marcados).map(cb => cb.value);
+        const ingredientesFormatados = escolhas.join(', ');
+
+        // Junta tudo em uma linha descritiva para a Inez ler fácil
+        const pedidoCompletoParaInez = `[Marmita ${tamanhoSelecionado}] - ${ingredientesFormatados}`;
+
+        const btnEnviar = document.getElementById('btnEnviar');
+        btnEnviar.innerText = "Enviando...";
+        btnEnviar.disabled = true;
+
+        const nomeUsuario = document.getElementById('nome').value;
+
+        try {
+            const idPedido = `${nomeUsuario.replace(/\s+/g, '')}-${dataHoje}`;
+
+            await setDoc(doc(db, "pedidos", idPedido), {
+                nome: nomeUsuario,
+                prato: pedidoCompletoParaInez, // Salva o tamanho + ingredientes juntos
+                data: dataHoje,
+                horario: new Date().toLocaleTimeString()
+            });
+
+            localStorage.setItem('pedido_' + dataHoje, pedidoCompletoParaInez);
+
+            document.getElementById('formPedido').innerHTML = `
+                <div style="text-align:center; color:green; font-weight:bold; padding: 20px;">
+                    <h3>🎉 Marmita Confirmada, ${nomeUsuario}!</h3>
+                    <p>Seu pedido foi enviado:</p>
+                    <p style="color:#333; font-weight:normal; background:#f8f9fa; padding:10px; border-radius:5px;">${pedidoCompletoParaInez}</p>
+                </div>`;
+
+        } catch (erro) {
+            console.error(erro);
+            alert("Erro ao enviar o seu pedido. Por favor, tente novamente.");
+            btnEnviar.innerText = "Confirmar Pedido";
+            btnEnviar.disabled = false;
+        }
+    });
+</script>
+
+</body>
+</html>

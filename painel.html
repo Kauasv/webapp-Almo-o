@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel da Inez - Gestão de Almoço</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; }
+        .container { background: white; padding: 20px; border-radius: 10px; max-width: 600px; margin: 0 auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2, h3 { color: #333; }
+        .secao { background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #e9ecef; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; }
+        input[type="text"] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; }
+        button:hover { background-color: #0056b3; }
+        button.btn-sucesso { background-color: #28a745; width: 100%; padding: 12px; font-size: 16px; margin-top: 10px; }
+        button.btn-sucesso:hover { background-color: #218838; }
+        .lista-pedidos { list-style: none; padding: 0; }
+        .lista-pedidos li { padding: 8px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; }
+        .resumo-texto { background: #e9ecef; padding: 10px; border-radius: 5px; white-space: pre-wrap; font-family: monospace; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Painel de Controle da Inez 👩‍🍳</h2>
+    
+    <div class="secao">
+        <h3>1. Atualizar Ingredientes do Dia</h3>
+        <form id="formCardapio">
+            <label for="ingredientes">Digite os ingredientes disponíveis hoje (separe por vírgula):</label>
+            <textarea id="ingredientes" rows="4" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;" placeholder="Ex: Arroz, Feijão, Macarrão, Carne de Panela, Batata Frita, Almofadinha" required></textarea>
+            <br><br>
+            <button type="submit" id="btnSalvarCardapio">Salvar e Publicar Cardápio</button>
+        </form>
+    </div>
+
+    <div class="secao">
+        <h3>2. Pedidos Recebidos</h3>
+        <ul class="lista-pedidos" id="listaPedidos">
+            <li>Carregando pedidos em tempo real...</li>
+        </ul>
+    </div>
+
+    <div class="secao">
+        <h3>3. Resumo para o Restaurante</h3>
+        <div class="resumo-texto" id="resumoTexto">Nenhum pedido recebido ainda hoje.</div>
+        <button class="btn-sucesso" id="btnCopiar">Copiar Texto para o WhatsApp 📲</button>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // 🔴 SUBSTITUA ESTES DADOS PELOS SEUS DADOS DO DO CONSOLE DO FIREBASE
+    const firebaseConfig = {
+        apiKey: "AIzaSyBrfXYmD0DwHD1Lk2Zf9c_Dvc3KrCiAD9A",
+        authDomain: "almoco-empresa-7a582.firebaseapp.com",
+        projectId: "almoco-empresa-7a582",
+        storageBucket: "almoco-empresa-7a582.firebasestorage.app",
+        messagingSenderId: "646365633884",
+        appId: "1:646365633884:web:acd39ed091832d9ebdb599",
+        measurementId: "G-BKJH0N2E6N"
+    };
+
+    // Inicializa o Firebase e o Banco de Dados (Firestore)
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Pega a data de hoje formatada (ex: "02/06/2026") para organizar os dados por dia
+    const dataHoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+
+    // --- LÓGICA 1: SALVAR OS INGREDIENTES NO BANCO ---
+    document.getElementById('formCardapio').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnSalvarCardapio');
+        btn.innerText = "Salvando...";
+        btn.disabled = true;
+
+        const textoIngredientes = document.getElementById('ingredientes').value;
+        
+        // Transforma o texto separado por vírgulas em uma lista de verdade (Array) no Javascript
+        const listaIngredientes = textoIngredientes.split(',').map(item => item.trim()).filter(item => item !== "");
+
+        try {
+            await setDoc(doc(db, "cardapios", dataHoje), {
+                itens: listaIngredientes, // Salva como uma lista/array no Firebase
+                data: dataHoje
+            });
+            alert("Lista de ingredientes publicada com sucesso!");
+        } catch (erro) {
+            console.error(erro);
+            alert("Erro ao salvar.");
+        } finally {
+            btn.innerText = "Salvar e Publicar Cardápio";
+            btn.disabled = false;
+        }
+    });
+
+    // --- LOGICA 2: OUVIR OS PEDIDOS EM TEMPO REAL ---
+    // Esta função fica "escutando" o banco. Se alguém pedir pelo celular, a tela da Inez atualiza na hora sem precisar dar F5.
+    const q = query(collection(db, "pedidos"), where("data", "==", dataHoje));
+    
+    onSnapshot(q, (snapshot) => {
+        const listaUl = document.getElementById('listaPedidos');
+        listaUl.innerHTML = ""; // Limpa a lista antiga
+
+        if (snapshot.empty) {
+            listaUl.innerHTML = "<li>Nenhum pedido feito hoje ainda.</li>";
+            document.getElementById('resumoTexto').innerText = "Nenhum pedido recebido ainda hoje.";
+            return;
+        }
+
+        const pedidos = [];
+        const contagem = {};
+
+        snapshot.forEach((doc) => {
+            const dadosPedido = doc.data();
+            pedidos.push(dadosPedido);
+
+            // Adiciona na lista visual individual
+            const li = document.createElement('li');
+            li.innerHTML = `<span>${dadosPedido.nome}</span> <b>${dadosPedido.prato}</b>`;
+            listaUl.appendChild(li);
+
+            // Soma para o resumo do restaurante
+            contagem[dadosPedido.prato] = (contagem[dadosPedido.prato] || 0) + 1;
+        });
+
+        // Atualiza a caixinha do resumo para o WhatsApp
+        let textoFinal = `*Pedidos de Almoço - Empresa Hidraup(${new Date().toLocaleDateString()})*\n\n`;
+        for (const prato in contagem) {
+            textoFinal += `• ${contagem[prato]}x ${prato}\n`;
+        }
+        textoFinal += `\n*Total de pedidos:* ${pedidos.length}`;
+        document.getElementById('resumoTexto').innerText = textoFinal;
+    });
+
+    // Botão de copiar texto do WhatsApp
+    document.getElementById('btnCopiar').addEventListener('click', function() {
+        const texto = document.getElementById('resumoTexto').innerText;
+        navigator.clipboard.writeText(texto);
+        alert("Resumo copiado! Pronto para colar no WhatsApp do restaurante.");
+    });
+</script>
+
+</body>
+</html>
