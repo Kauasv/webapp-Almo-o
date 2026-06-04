@@ -5,35 +5,132 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pedido de Almoço da Empresa</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-        h2 { text-align: center; color: #333; margin-bottom: 5px; }
-        .horario-aviso { background-color: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; font-size: 14px; margin-bottom: 20px; text-align: center; }
-        .campo { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        body { 
+        font-family: Arial, sans-serif;
+        background: linear-gradient(90deg,rgba(0, 21, 250, 1) 1%, rgba(255, 0, 0, 1) 100%);        margin: 0; padding: 20px;
+        display: flex;
+        justify-content: center; 
+      }
+        .container { background-image: url("LOGO.PNG");
+        background-size: 160%; 
+        background-position: center; 
+        background-repeat: no-repeat;
+        background-color: rgba(2, 2, 2, 0.525);    
+        padding: 20px; border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.938); 
+        width: 100%; 
+        max-width: 400px;
+     }
+        h2 { 
+            text-align:center; 
+            color: #ffffff;
+             margin-bottom: 5px;
+             }
+        .horario-aviso {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .campo { 
+            margin-bottom: 15px; }
+        label { 
+            display: block; 
+            margin-bottom: 5px; 
+            font-weight: bold; 
+            color: #ffffff;
+        }
+
+        input[type="text"] {
+             width: 100%; 
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            border-radius: 5px; 
+            box-sizing: border-box; 
+        }
         
         /* Estilo para a seleção de tamanho lado a lado */
-        .opcoes-tamanho { display: flex; gap: 10px; margin-bottom: 20px; }
-        .opcao-tamanho-card { flex: 1; text-align: center; background: #f8f9fa; border: 1px solid #e9ecef; padding: 12px; border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
-        .opcao-tamanho-card input { transform: scale(1.2); cursor: pointer; }
-        .opcao-tamanho-card label { margin: 0; font-weight: bold; cursor: pointer; }
-
-        .opcoes-prato { margin: 15px 0; }
-        .opcao { background: #f8f9fa; padding: 10px; margin-bottom: 8px; border-radius: 5px; border: 1px solid #e9ecef; display: flex; align-items: center; }
-        .opcao input { margin-right: 10px; transform: scale(1.2); cursor: pointer; }
-        .opcao label { font-weight: normal; margin-bottom: 0; cursor: pointer; width: 100%; }
+        .opcoes-tamanho { 
+            display: flex;
+            gap: 10px; 
+            margin-bottom: 20px; 
+        }
+        .opcao-tamanho-card { flex: 1; text-align: center; 
+            background: #f8f9fa; border: 1px solid #e9ecef; 
+            padding: 12px; border-radius: 5px; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 5px; 
         
-        button { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; }
-        button:disabled { background-color: #6c757d; cursor: not-allowed; }
-        #mensagem-erro { color: red; text-align: center; font-weight: bold; margin-top: 10px; }
-        .loading { text-align: center; color: #666; font-style: italic; }
+        }
+        .opcao-tamanho-card input { 
+            transform: scale(1.2);
+            cursor: pointer; 
+        }
+        .opcao-tamanho-card label { 
+            margin: 0; 
+            font-weight: bold; 
+            cursor: pointer; 
+            color: #000000;
+        }
+
+        .opcoes-prato {
+            margin: 15px 0; 
+        }
+        .opcao { 
+            background: #f8f9fa; 
+            padding: 10px; 
+            margin-bottom: 8px; 
+            border-radius: 5px; 
+            border: 1px solid #e9ecef; 
+            display: flex; 
+            align-items: center; 
+        }
+        .opcao input { 
+            margin-right: 10px; 
+            transform: scale(1.2); 
+            cursor: pointer; 
+        }
+        .opcao label { 
+            font-weight: normal; 
+            margin-bottom: 0; 
+            cursor: pointer; 
+            width: 100%; 
+            color: #000000;
+        }
+        
+        button { width: 100%; padding: 12px; 
+            background-color: #28a745; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            font-size: 16px; 
+            cursor: pointer; 
+        }
+        button:disabled { 
+            background-color: #6c757d; 
+            cursor: not-allowed; 
+        }
+        #mensagem-erro { color: red; 
+            text-align: center; 
+            font-weight: bold; 
+            margin-top: 10px; 
+        }
+        .loading { text-align: center; 
+            color: #666; 
+            font-style: italic; 
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Monte sua Marmita 🍲</h2>
+    <h2>Monte sua Marmita 🍴 </h2>
     <div class="horario-aviso">⚠️ Pedidos devem ser feitos até as <b>09:00</b>!</div>
 
     <form id="formPedido">
@@ -50,12 +147,12 @@
                     <label for="tamP">P</label>
                 </div>
                 <div class="opcao-tamanho-card">
-                    <input type="radio" id="tamG" name="tamanhoMarmita" value="G">
-                    <label for="tamG">G</label>
+                    <input type="radio" id="tamM" name="tamanhoMarmita" value="M">
+                    <label for="tamM">M</label>
                 </div>
                 <div class="opcao-tamanho-card">
-                    <input type="radio" id="tamQ" name="tamanhoMarmita" value="P">
-                    <label for="tamM">M</label>
+                    <input type="radio" id="tamG" name="tamanhoMarmita" value="G">
+                    <label for="tamG">G</label>
                 </div>
             </div>
         </div>
@@ -100,7 +197,7 @@
         const msgErro = document.getElementById('mensagem-erro');
         const form = document.getElementById('formPedido');
 
-        if (hora < 9 || (hora === 9 && minutos > 0)) {
+        if (hora > 9 || (hora === 9 && minutos > 0)) {
             btnEnviar.disabled = true;
             msgErro.innerText = "Horário limite excedido! O sistema fechou às 09:00.";
             return false;
