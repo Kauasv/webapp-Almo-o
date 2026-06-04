@@ -114,7 +114,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, doc, setDoc, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // 🔴 SUBSTITUA ESTES DADOS PELOS SEUS DADOS DO DO CONSOLE DO FIREBASE
+    // Dados de conexão do Firebase 
     const firebaseConfig = {
         apiKey: "AIzaSyBrfXYmD0DwHD1Lk2Zf9c_Dvc3KrCiAD9A",
         authDomain: "almoco-empresa-7a582.firebaseapp.com",
@@ -129,8 +129,11 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Pega a data de hoje formatada (ex: "02/06/2026") para organizar os dados por dia
+    // Pega a data de hoje formatada (ex: "02-06-2026") para organizar os dados por dia
     const dataHoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+
+    // Variável global para guardar os pedidos e usar na exportação do Excel
+    let listaPedidosGlobal = [];
 
     // --- LÓGICA 1: SALVAR OS INGREDIENTES NO BANCO ---
     document.getElementById('formCardapio').addEventListener('submit', async function(e) {
@@ -140,13 +143,11 @@
         btn.disabled = true;
 
         const textoIngredientes = document.getElementById('ingredientes').value;
-        
-        // Transforma o texto separado por vírgulas em uma lista de verdade (Array) no Javascript
         const listaIngredientes = textoIngredientes.split(',').map(item => item.trim()).filter(item => item !== "");
 
         try {
             await setDoc(doc(db, "cardapios", dataHoje), {
-                itens: listaIngredientes, // Salva como uma lista/array no Firebase
+                itens: listaIngredientes,
                 data: dataHoje
             });
             alert("Lista de ingredientes publicada com sucesso!");
@@ -160,41 +161,46 @@
     });
 
     // --- LOGICA 2: OUVIR OS PEDIDOS EM TEMPO REAL ---
-    // Esta função fica "escutando" o banco. Se alguém pedir pelo celular, a tela da Inez atualiza na hora sem precisar dar F5.
     const q = query(collection(db, "pedidos"), where("data", "==", dataHoje));
     
     onSnapshot(q, (snapshot) => {
         const listaUl = document.getElementById('listaPedidos');
-        listaUl.innerHTML = ""; // Limpa a lista antiga
+        listaUl.innerHTML = ""; 
 
         if (snapshot.empty) {
             listaUl.innerHTML = "<li>Nenhum pedido feito hoje ainda.</li>";
             document.getElementById('resumoTexto').innerText = "Nenhum pedido recebido ainda hoje.";
+            listaPedidosGlobal = []; // Limpa a lista global
             return;
         }
 
-        const pedidos = [];
+        listaPedidosGlobal = []; // Limpa antes de repopular
         const contagem = {};
+
+        // 1. ALTERAÇÃO DO TEXTO DO WHATSAPP: Começa o cabeçalho do texto
+        let textoFinal = `*Pedidos de Almoço - Empresa Hidraup (${new Date().toLocaleDateString()})*\n\n`;
 
         snapshot.forEach((doc) => {
             const dadosPedido = doc.data();
-            pedidos.push(dadosPedido);
+            listaPedidosGlobal.push(dadosPedido); // Salva para o Excel
 
-            // Adiciona na lista visual individual
+            // Adiciona na lista visual da tela da Inez
             const li = document.createElement('li');
             li.innerHTML = `<span>${dadosPedido.nome}</span> <b>${dadosPedido.prato}</b>`;
             listaUl.appendChild(li);
 
-            // Soma para o resumo do restaurante
+            // 1. ALTERAÇÃO DO TEXTO DO WHATSAPP: Coloca o Nome na frente do Pedido/Marmita
+            // Cada linha vai ficar: "• João Silva: [Marmita G] - Arroz, Carne"
+            textoFinal += `• *${dadosPedido.nome}:* ${dadosPedido.prato}\n`;
+
+            // Soma para o resumo de totais por tipo (se a Inez ainda quiser ver os totais no fim do texto)
             contagem[dadosPedido.prato] = (contagem[dadosPedido.prato] || 0) + 1;
         });
 
-        // Atualiza a caixinha do resumo para o WhatsApp
-        let textoFinal = `*Pedidos de Almoço - Empresa Hidraup(${new Date().toLocaleDateString()})*\n\n`;
-        for (const prato in contagem) {
-            textoFinal += `• ${contagem[prato]}x ${prato}\n`;
-        }
-        textoFinal += `\n*Total de pedidos:* ${pedidos.length}`;
+        // Adiciona o total de marmitas no fim do texto do WhatsApp
+        textoFinal += `\n*Total de pedidos:* ${listaPedidosGlobal.length}`;
+        
+        // Exibe o texto atualizado na caixinha cinza para a Inez copiar
         document.getElementById('resumoTexto').innerText = textoFinal;
     });
 
@@ -203,6 +209,53 @@
         const texto = document.getElementById('resumoTexto').innerText;
         navigator.clipboard.writeText(texto);
         alert("Resumo copiado! Pronto para colar no WhatsApp do restaurante.");
+    }); 
+
+    // --- LÓGICA 3: EXPORTAR PARA EXCEL (NOVA FUNÇÃO) ---
+    // Cria e adiciona o botão de Excel via código na página para não quebrar seu HTML
+    const btnExcel = document.createElement('button');
+    btnExcel.innerText = "Exportar para Excel 📊";
+    btnExcel.style.backgroundColor = "#1d6f42"; // Verde do Excel
+    btnExcel.style.marginTop = "10px";
+    btnExcel.style.width = "100%";
+    btnExcel.style.padding = "12px";
+    btnExcel.style.fontSize = "16px";
+    btnExcel.style.color = "white";
+    btnExcel.style.border = "none";
+    btnExcel.style.borderRadius = "5px";
+    btnExcel.style.cursor = "pointer";
+    
+    // Insere o botão logo abaixo do botão do WhatsApp no painel
+    document.getElementById('btnCopiar').parentNode.appendChild(btnExcel);
+
+    btnExcel.addEventListener('click', function() {
+        if (listaPedidosGlobal.length === 0) {
+            alert("Não há pedidos hoje para exportar!");
+            return;
+        }
+
+        // Monta o conteúdo do arquivo usando formato CSV (que o Excel abre perfeitamente)
+        // O caractere '\ufeff' serve para o Excel entender os acentos (UTF-8) corretamente no Windows
+        let csvConteudo = "\ufeff";
+        csvConteudo += "Nome;Marmita e Ingredientes;Horário\n"; // Cabeçalho do Excel
+
+        // Preenche as linhas com os dados de cada funcionário
+        listaPedidosGlobal.forEach(p => {
+            csvConteudo += `"${p.nome}";"${p.prato}";"${p.horario}"\n`;
+        });
+
+        // Cria o arquivo para download no navegador
+        const blob = new Blob([csvConteudo], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        
+        link.setAttribute("href", url);
+        link.setAttribute("download", `pedidos_hidraup_${dataHoje}.csv`);
+        link.style.visibility = 'hidden';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     });
 </script>
 
