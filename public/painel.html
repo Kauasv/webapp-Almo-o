@@ -6,12 +6,13 @@
     <title>Painel da Inez - Gestão de Almoço</title>
     <style>
         body { 
-            font-family: Arial, sans-serif; 
-            background-color: #f4f4f9; 
-            padding: 20px; 
-            background: linear-gradient(90deg,rgba(0, 21, 250, 1) 1%, rgba(255, 0, 0, 1) 100%);        margin: 0; padding: 20px;
-
-        }
+        font-family: Arial, sans-serif;
+        background: linear-gradient(90deg,rgba(0, 21, 250, 1) 1%,rgba(109, 109, 109, 0.681) 50%, rgba(255, 0, 0, 1) 100%);
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        justify-content: center; 
+      }
             
         .container { background: white; 
             padding: 20px; 
@@ -44,16 +45,30 @@
             border-radius: 5px; 
             box-sizing: border-box; 
         }
-        button { padding: 10px 15px; 
-            background-color: #003267; 
-            color: white; border: 
-            none; border-radius: 5px; 
-            cursor: pointer; 
-            font-size: 14px; 
+        button {
+         background-image: linear-gradient(to right, #009dff 0%, #929292 50%, #ec0000 100%);
+        }
+        
+        button { 
+            margin: 10px;
+            padding: 15px 45px;
+            text-align: center;
+            text-transform: uppercase;
+            transition: 0.5s;
+            background-size: 200% auto;
+            color: white;
+            box-shadow: 0 0 20px #000000;
+            border-radius: 10px;
+            display: block;
+            outline: none;
+            border: none;
         }
         button:hover { 
-            background-color: #0056b3; 
+            background-position: right center;
+            color: #fff;
+            text-decoration: none;
         }
+        
         button.btn-sucesso { 
             background-color: #28a745; 
             width: 100%; padding: 12px; 

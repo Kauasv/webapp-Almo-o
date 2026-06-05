@@ -1,19 +1,35 @@
-Banco == Firebase 
-Linguagem dominante : HTML CSS JS . 
+# 🍽️ Sistema de Pedidos de Almoço
 
+## 📋 Objetivo
+Este projeto foi desenvolvido para atender à demanda de reunir os pedidos de almoço de forma mais prática antes de serem enviados para o restaurante.
 
+## 🔄 Fluxo do Sistema
 
+1. **Solicitante** → Disponibiliza o cardápio para os demais funcionários
+2. **Funcionários** → Realizam o preenchimento do cardápio, selecionando o que desejam
+3. **Solicitante** → Copia ou gera um arquivo Excel para enviar ao restaurante
 
-----------------------------------------------------------------------------------------------------
-Acessos Firebase : 
-// Import the functions you need from the SDKs you need
+---
+
+## 🏗️ Estrutura do Projeto
+
+| Item | Detalhes |
+|------|----------|
+| **Banco de Dados** | Firebase Firestore |
+| **Front-end** | HTML, CSS, JavaScript |
+| **Hosting** | Firebase Hosting |
+| **URL do Hosting** | [https://almoco-empresa-7a582.web.app](https://almoco-empresa-7a582.web.app) |
+
+---
+
+## ⚙️ Configuração do Firebase
+
+```javascript
+// Importar os módulos necessários
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Configuração do Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyBrfXYmD0DwHD1Lk2Zf9c_Dvc3KrCiAD9A",
   authDomain: "almoco-empresa-7a582.firebaseapp.com",
@@ -24,10 +40,25 @@ const firebaseConfig = {
   measurementId: "G-BKJH0N2E6N"
 };
 
-// Initialize Firebase
+// Inicializar Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
+```
 
------------------------X----------------------------------X-----------------------------------------
-SDK Firebase : 
+---
+
+## 📦 Instalação
+
+```bash
 npm install firebase
+```
+
+---
+
+## ℹ️ Informações do Projeto
+
+| Campo | Informação |
+|-------|------------|
+| **Desenvolvedor** | Kauã Silva Valadares |
+| **Cliente** | Hidraup Soluções |
+| **Data** | Junho de 2026 |

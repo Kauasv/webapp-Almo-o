@@ -7,7 +7,9 @@
     <style>
         body { 
         font-family: Arial, sans-serif;
-        background: linear-gradient(90deg,rgba(0, 21, 250, 1) 1%, rgba(255, 0, 0, 1) 100%);        margin: 0; padding: 20px;
+        background: linear-gradient(90deg,rgba(0, 21, 250, 1) 1%,rgba(109, 109, 109, 0.681) 50%, rgba(255, 0, 0, 1) 100%);
+        margin: 0;
+        padding: 20px;
         display: flex;
         justify-content: center; 
       }
@@ -103,18 +105,29 @@
             width: 100%; 
             color: #000000;
         }
-        
-        button { width: 100%; padding: 12px; 
-            background-color: #28a745; 
-            color: white; 
-            border: none; 
-            border-radius: 5px; 
-            font-size: 16px; 
-            cursor: pointer; 
+
+        button {
+         background-image: linear-gradient(to right, #009dff 0%, #929292 50%, #ec0000 100%);
         }
-        button:disabled { 
-            background-color: #6c757d; 
-            cursor: not-allowed; 
+        
+        button { 
+            margin: 10px;
+            padding: 15px 45px;
+            text-align: center;
+            text-transform: uppercase;
+            transition: 0.5s;
+            background-size: 200% auto;
+            color: white;
+            box-shadow: 0 0 20px #000000;
+            border-radius: 10px;
+            display: block;
+            outline: none;
+            border: none;
+        }
+        button:hover { 
+            background-position: right center;
+            color: #fff;
+            text-decoration: none;
         }
         #mensagem-erro { color: red; 
             text-align: center; 
